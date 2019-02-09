@@ -19,6 +19,13 @@ export Q := @
 endif
 endif
 
+# Default tools
+
+ifeq ($(DIRLINK),)
+DIRLINK = $(TOPDIR)/tools/link.sh
+DIRUNLINK = $(TOPDIR)/tools/unlink.sh
+endif
+
 # This is the name of the final target (relative to the top level directorty)
 
 OUTPUTPATH = build

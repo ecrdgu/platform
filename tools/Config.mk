@@ -8,6 +8,23 @@ LIBEXT ?= .a
 
 DELIM = $(strip /)
 
+# INCDIR - Convert a list of directory paths to a list of compiler include
+#   directories
+# Example: CFFLAGS += ${shell $(INCDIR) [options] "compiler" "dir1" "dir2" "dir2" ...}
+#
+# Note that the compiler string and each directory path string must quoted if
+# they contain spaces or any other characters that might get mangled by the
+# shell
+#
+# Depends on this setting passed as a make commaond line definition from the
+# toplevel Makefile:
+#
+#   TOPDIR - The path to the top level NuttX directory in the form
+#     appropriate for the current build environment
+#
+
+INCDIR = "$(TOPDIR)/tools/incdir.sh"
+
 # PREPROCESS - Default macro to run the C pre-processor
 # Example: $(call PREPROCESS, in-file, out-file)
 #
