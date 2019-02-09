@@ -63,9 +63,8 @@ check_context:
 	$(Q) if [ ! -e ${TOPDIR}/.config -o ! -e ${TOPDIR}/Make.defs ]; then \
 		echo "" ; \
 		echo "Project has not been configured:" ; \
-		echo "  Rename defconfig to .config" ; \
-		echo "   after copy defconfig and Make.defs from configs/<board-name>/<config>" ; \
-	echo "" ; \
+		echo "  tools/configure.sh <target>" ; \
+		echo "" ; \
 		exit 1 ; \
 	fi
 
