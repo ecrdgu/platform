@@ -1,0 +1,29 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the tools repository.
+#
+
+choice
+	prompt "Select target board"
+	default ARCH_BOARD_STM32F103_MINIMUM
+	---help---
+		Select the board hosting the architecture.  You must first select the
+		exact MCU part number, then the boards supporting that part will
+		be available for selection.  Use ARCH_BOARD_CUSTOM to create a new
+		board configuration.
+
+config ARCH_BOARD_STM32F103_MINIMUM
+	bool "STM32F103C8T6 Minimum ARM Development Board"
+	depends on ARCH_CHIP_STM32F103C8
+	---help---
+		A configuration for the STM32F103 Minimum board.
+
+endchoice
+
+config ARCH_BOARD
+	string
+	default "stm32f103-minimum"        if ARCH_BOARD_STM32F103_MINIMUM
+
+if ARCH_BOARD_STM32F103_MINIMUM
+source "configs/stm32f103-minimum/Kconfig"
+endif
