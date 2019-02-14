@@ -1,0 +1,33 @@
+# Build result files
+*.o
+*.a
+*.i
+*.d
+*~
+
+# Project configured files
+
+/.config
+/.config.old
+/Make.defs
+
+# Eclipse project files
+
+.project
+.cproject
+.settings
+
+# Temporary files
+
+.swp
+.*.swp
+
+# ctags file
+/tags
+
+# GDB initial file
+
+/.gdbinit
+/cscope.*
+
+
