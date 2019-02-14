@@ -26,6 +26,11 @@ DIRLINK = $(TOPDIR)/tools/link.sh
 DIRUNLINK = $(TOPDIR)/tools/unlink.sh
 endif
 
+# Add-on directories.  These may or may not be in place in the
+# Project source tree (they must be specifically installed)
+
+include tools/Directories.mk
+
 # This is the name of the final target (relative to the top level directorty)
 
 OUTPUTPATH = build
