@@ -24,7 +24,7 @@ endif
 
 # Targets
 
-all: mkconfig mkversion
+all: mkconfig mkdeps mksymtab mksyscall mkversion
 
 default: mkconfig mksyscall mkdeps
 
@@ -40,7 +40,25 @@ mkconfig: mkconfig.c cfgdefine.c
 mkversion: mkconfig.c cfgdefine.c
 	$(Q) $(HOSTCC) $(HOSTCFLAGS) -o mkversion mkversion.c cfgdefine.c
 
+# mksyscall - Convert a CSV file into syscall stubs and proxies
+
+mksyscall: mksyscall.c csvparser.c
+	$(Q) $(HOSTCC) $(HOSTCFLAGS) -o mksyscall mksyscall.c csvparser.c
+
+# mksymtab - Convert a CSV file into a symbol table
+
+mksymtab: mksymtab.c csvparser.c
+	$(Q) $(HOSTCC) $(HOSTCFLAGS) -o mksymtab mksymtab.c csvparser.c
+
+# Create dependencies for a list of files
+
+mkdeps: mkdeps.c csvparser.c
+	$(Q) $(HOSTCC) $(HOSTCFLAGS) -o mkdeps mkdeps.c
+
 clean:
+	$(call DELFILE, mkdeps)
 	$(call DELFILE, mkconfig)
+	$(call DELFILE, Make.dep)
+	$(call DELFILE, mksyscall)
 	$(call DELFILE, mkversion)
 	$(call CLEAN)

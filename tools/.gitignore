@@ -1,3 +1,6 @@
 /mkconfig
+/mkdeps
+/mksymtab
+/mksyscall
 /mkversion
 /*.dSYM

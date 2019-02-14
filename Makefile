@@ -66,6 +66,12 @@ tools/mkconfig$(HOSTEXEEXT):
 include/ecr/config.h: $(TOPDIR)/.config tools/mkconfig$(HOSTEXEEXT)
 	$(Q) tools/mkconfig $(TOPDIR) > include/ecr/config.h
 
+# Targets used to create dependencies
+
+tools/mkdeps$(HOSTEXEEXT):
+	$(Q) $(MAKE) -C tools -f Makefile.host TOPDIR="$(TOPDIR)" mkdeps$(HOSTEXEEXT)
+
+
 # context
 #
 # The context target is invoked on each target build to assure that NuttX is
@@ -160,7 +166,7 @@ gconfig: do_gconfig clean_context
 
 # General housekeeping targets:  dependencies, cleaning, etc.
 
-depend: context
+depend: context tools/mkdeps$(HOSTEXEEXT)
 	$(Q) for dir in $(USERDEPDIRS) ; do \
 		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" depend ; \
 	done
@@ -174,6 +180,7 @@ subdir_clean:
 			$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" clean ; \
 		fi \
 	done
+	$(Q) $(MAKE) -C tools -f Makefile.host TOPDIR="$(TOPDIR)" clean
 
 clean: subdir_clean
 	$(call DELDIR, $(OUTPUTPATH))
