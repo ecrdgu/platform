@@ -90,6 +90,7 @@ context: check_context include/ecr/config.h include/ecr/version.h
 # and symbolic links created by the context target.
 
 clean_context:
+	$(Q) $(MAKE) -C apps TOPDIR="$(TOPDIR)" clean_context
 	$(call DELFILE, include/ecr/config.h)
 	$(call DELFILE, include/ecr/version.h)
 
@@ -129,37 +130,37 @@ download: $(BIN)
 # must first download and install the kconfig-frontends package from this
 # location: http://ymorin.is-a-geek.org/projects/kconfig-frontends.
 
-do_config:
+do_config: apps_preconfig
 	$(Q) kconfig-conf Kconfig
 
 config: do_config clean_context
 
-do_oldconfig:
+do_oldconfig: apps_preconfig
 	$(Q) kconfig-conf --oldconfig Kconfig
 
 oldconfig: do_oldconfig clean_context
 
-do_olddefconfig:
+do_olddefconfig: apps_preconfig
 	$(Q) kconfig-conf --olddefconfig Kconfig
 
 olddefconfig: do_olddefconfig clean_context
 
-do_menuconfig:
+do_menuconfig: apps_preconfig
 	$(Q) kconfig-mconf Kconfig
 
 menuconfig: do_menuconfig clean_context
 
-do_nconfig:
+do_nconfig: apps_preconfig
 	$(Q) kconfig-nconf Kconfig
 
 nconfig: do_nconfig clean_context
 
-do_qconfig:
+do_qconfig: apps_preconfig
 	$(Q) kconfig-qconf Kconfig
 
 qconfig: do_qconfig clean_context
 
-do_gconfig:
+do_gconfig: apps_preconfig
 	$(Q) kconfig-gconf Kconfig
 
 gconfig: do_gconfig clean_context
@@ -198,3 +199,13 @@ distclean: clean subdir_distclean clean_context
 	$(call DELFILE, .config)
 	$(call DELFILE, .config.old)
 
+# Application housekeeping targets. For the most part, the application
+# directory is treated like any other build directory in this script.
+# However, as a convenience, the following targets are included to support
+# housekeeping functions in the user application directory from the Project
+# build directory.
+#
+# apps_preconfig: Prepare applications to be configured
+
+apps_preconfig:
+	$(Q) $(MAKE) -C apps TOPDIR="$(TOPDIR)" preconfig

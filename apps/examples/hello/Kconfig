@@ -3,3 +3,13 @@
 # see the file kconfig-language.txt in the tools repository.
 #
 
+
+config EXAMPLES_HELLO
+	tristate "\"Hello, World!\" example"
+	default n
+	---help---
+		Enable the \"Hello, World!\" example
+
+if EXAMPLES_HELLO
+
+endif #EXAMPLES_HELLO

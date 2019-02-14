@@ -1,0 +1,128 @@
+
+include $(TOPDIR)/.config
+include $(TOPDIR)/build/Make.defs
+
+# Control build verbosity
+#
+#   V=1,2: Enable echo of commands
+#   V=2:   Enable bug/verbose options in tools and scripts
+
+ifeq ($(V),1)
+export Q :=
+else
+ifeq ($(V),2)
+export Q :=
+else
+export Q := @
+endif
+endif
+
+# Some defaults just to prohibit some bad behavior if for some reason they
+# are not defined
+
+OBJEXT ?= .o
+LIBEXT ?= .a
+
+# Common default definitions
+#
+#   PREPROCESS - Default macro to run the C pre-processor
+#   COMPILE    - Default macro to compile one C file
+#   COMPILEXX  - Default macro to compile one C++ file
+#   ASSEMBLE   - Default macro to assemble one assembly language file
+
+define PREPROCESS
+	@echo "CPP: $1->$2"
+	$(Q) $(CPP) $(CPPFLAGS) $1 -o $2
+endef
+
+define COMPILE
+	@echo "CC: $1"
+	$(Q) $(CC) -c $(CFLAGS) $1 -o $2
+endef
+
+define COMPILEXX
+	@echo "CXX: $1"
+	$(Q) $(CXX) -c $(CXXFLAGS) $1 -o $2
+endef
+
+define ASSEMBLE
+	@echo "AS: $1"
+	$(Q) $(CC) -c $(AFLAGS) $1 -o $2
+endef
+
+# Environment-specific definitions
+#
+#   DELIM    - Environment-specific file path separator
+#   ARCHIVE  - Add a list of files to an archive
+#   DELFILE  - Delete one file
+#   DELDIR   - Delete one directory
+#   MOVEFILE - Move one file
+#   CLEAN    - Default clean target
+
+DELIM = $(strip /)
+
+define ARCHIVE
+	@echo "AR: $2"
+	$(Q) $(AR) $1 $(2) || { echo "$(AR) $1 FAILED!" ; exit 1 ; }
+endef
+
+define DELFILE
+	$(Q) rm -f $1
+endef
+
+define DELDIR
+  $(Q) rm -rf $(1)
+endef
+
+define MOVEFILE
+	$(Q) mv -f $1 $2
+endef
+
+define CLEAN
+	$(Q) rm -f *$(OBJEXT) *$(LIBEXT) *~ .*.swp
+endef
+
+
+# Tool related definitions
+# Linux/Cygwin-native toolchain
+ARCHINCLUDES = -I. -isystem $(TOPDIR)$(DELIM)include
+ARCHXXINCLUDES = -I. -isystem $(TOPDIR)$(DELIM)include -isystem $(TOPDIR)$(DELIM)include$(DELIM)cxx
+ARCHCRT0OBJ = $(TOPDIR)$(DELIM)startup$(DELIM)crt0$(OBJEXT)
+
+ARCHCFLAGS += -fno-common -pipe
+ARCHCXXFLAGS += -fno-common -pipe
+
+CFLAGS = $(ARCHCFLAGS) $(ARCHWARNINGS) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHINCLUDES) $(ARCHDEFINES) $(EXTRADEFINES)
+CPICFLAGS = $(ARCHPICFLAGS) $(CFLAGS)
+
+CXXFLAGS = $(ARCHCXXFLAGS) $(ARCHWARNINGSXX) $(ARCHOPTIMIZATION) $(ARCHXXINCLUDES) $(ARCHDEFINES) $(EXTRADEFINES)
+CXXPICFLAGS = $(ARCHPICFLAGS) $(CXXFLAGS)
+
+# ELF module definitions
+
+CELFFLAGS = $(CFLAGS)
+CXXELFFLAGS = $(CXXFLAGS)
+
+# C Pre-processor
+
+CPPFLAGS = $(ARCHINCLUDES) $(ARCHDEFINES) $(EXTRADEFINES)
+AFLAGS = $(CFLAGS) -D__ASSEMBLY__
+
+# Linker
+LDLIBPATH = -L $(APPDIR) -L $(TOPDIR)$(DELIM)libs
+
+LDLIBS = -lapps -lecr
+
+# Try to get the path to libgcc.a.  Of course, this only works for GCC
+# toolchains.
+
+LIBGCC = "${shell "$(CC)" $(ARCHCPUFLAGS) -print-libgcc-file-name 2>/dev/null}"
+ifneq ($(LIBGCC),)
+  LDLIBPATH += -L "${shell dirname $(LIBGCC)}"
+  LDLIBS += -lgcc
+endif
+
+# ELF module definitions
+
+LDELFFLAGS = -r -e _start -Bstatic
+LDELFFLAGS += -T $(TOPDIR)/scripts/gnu-elf.ld
