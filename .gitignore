@@ -10,6 +10,7 @@
 /.config
 /.config.old
 /Make.defs
+/.version
 
 # Eclipse project files
 

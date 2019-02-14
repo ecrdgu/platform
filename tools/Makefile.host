@@ -1,0 +1,46 @@
+TOPDIR ?= ${shell pwd}/..
+
+-include $(TOPDIR)/Make.defs
+include ${TOPDIR}/tools/Config.mk
+
+# Check the endian-ness of the target
+
+# Define HOSTCC on the make command line if it differs from these defaults
+# Define HOSTCFLAGS with -g on the make command line to build debug versions
+
+HOSTOS = ${shell uname -o 2>/dev/null || echo "Other"}
+
+# GCC is assumed in the POSIX environment (Linux or Cygwin).
+# strtok_r is used in some tools, but does not seem to be available in
+# the MinGW environment.
+
+HOSTCC ?= gcc
+HOSTCFLAGS ?= -O2 -Wall -Wstrict-prototypes -Wshadow -I.
+HOSTCFLAGS += -DHAVE_STRTOK_C=1
+
+ifeq ($(CONFIG_ENDIAN_BIG),y)
+CFLAGS += -DTGT_BIGENDIAN=1
+endif
+
+# Targets
+
+all: mkconfig mkversion
+
+default: mkconfig mksyscall mkdeps
+
+.PHONY: clean
+
+# mkconfig - Convert a .config file into a C config.h file
+
+mkconfig: mkconfig.c cfgdefine.c
+	$(Q) $(HOSTCC) $(HOSTCFLAGS) -o mkconfig mkconfig.c cfgdefine.c
+
+# mkversion - Convert a .version file into a C version.h file
+
+mkversion: mkconfig.c cfgdefine.c
+	$(Q) $(HOSTCC) $(HOSTCFLAGS) -o mkversion mkversion.c cfgdefine.c
+
+clean:
+	$(call DELFILE, mkconfig)
+	$(call DELFILE, mkversion)
+	$(call CLEAN)

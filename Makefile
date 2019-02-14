@@ -39,6 +39,33 @@ BIN      = $(OUTPUTPATH)/$(OUTPUT)$(EXEEXT)
 all: $(BIN)
 .PHONY: context clean_context check_context config oldconfig menuconfig nconfig qconfig gconfig subdir_clean clean subdir_distclean distclean
 
+# Targets used to build include/ecr/version.h.  Creation of version.h is
+# part of the overall NuttX configuration sequence. Notice that the
+# tools/mkversion tool is built and used to create include/ecr/version.h
+
+tools/mkversion$(HOSTEXEEXT):
+	$(Q) $(MAKE) -C tools -f Makefile.host TOPDIR="$(TOPDIR)"  mkversion$(HOSTEXEEXT)
+
+$(TOPDIR)/.version:
+	$(Q) if [ ! -f .version ]; then \
+		echo "No .version file found, creating one"; \
+		tools/version.sh -v 0.0 -b 0 .version; \
+		chmod 755 .version; \
+	fi
+
+include/ecr/version.h: $(TOPDIR)/.version tools/mkversion$(HOSTEXEEXT)
+	$(Q) tools/mkversion $(TOPDIR) > include/ecr/version.h
+
+# Targets used to build include/ecr/config.h.  Creation of config.h is
+# part of the overall NuttX configuration sequence. Notice that the
+# tools/mkconfig tool is built and used to create include/ecr/config.h
+
+tools/mkconfig$(HOSTEXEEXT):
+	$(Q) $(MAKE) -C tools -f Makefile.host TOPDIR="$(TOPDIR)"  mkconfig$(HOSTEXEEXT)
+
+include/ecr/config.h: $(TOPDIR)/.config tools/mkconfig$(HOSTEXEEXT)
+	$(Q) tools/mkconfig $(TOPDIR) > include/ecr/config.h
+
 # context
 #
 # The context target is invoked on each target build to assure that NuttX is
@@ -46,7 +73,7 @@ all: $(BIN)
 # the config.h and version.h header files in the include/nuttx directory and
 # the establishment of symbolic links to configured directories.
 
-context: check_context
+context: check_context include/ecr/config.h include/ecr/version.h
 	$(Q) for dir in $(CONTEXTDIRS) ; do \
 		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" context; \
 	done
@@ -57,6 +84,8 @@ context: check_context
 # and symbolic links created by the context target.
 
 clean_context:
+	$(call DELFILE, include/ecr/config.h)
+	$(call DELFILE, include/ecr/version.h)
 
 # check_context
 #
