@@ -32,6 +32,8 @@ ARCH_DIR = arch/$(CONFIG_ARCH)
 ARCH_SRC = $(ARCH_DIR)/src
 ARCH_INC = $(ARCH_DIR)/include
 
+BOARD_DIR = $(TOPDIR)$(DELIM)configs$(DELIM)$(CONFIG_ARCH_BOARD)
+
 # Add-on directories.  These may or may not be in place in the
 # Project source tree (they must be specifically installed)
 
@@ -102,6 +104,18 @@ include/arch: .config
 	@echo "LN: include/arch to $(ARCH_DIR)/include"
 	$(Q) $(DIRLINK) $(TOPDIR)/$(ARCH_DIR)/include include/arch
 
+# Link the configs/<board-name>/include directory to include/arch/board
+
+include/arch/board: include/arch
+	@echo "LN: include/arch/board to $(BOARD_DIR)/include"
+	$(Q) $(DIRLINK) $(BOARD_DIR)/include include/arch/board
+
+# Link the configs/<board-name>/src dir to arch/<arch-name>/src/board
+
+$(ARCH_SRC)/board: .config
+	@echo "LN: $(ARCH_SRC)/board to $(BOARD_DIR)/src"
+	$(Q) $(DIRLINK) $(BOARD_DIR)/src $(ARCH_SRC)/board
+
 # Link arch/<arch-name>/include/<chip-name> to arch/<arch-name>/include/chip
 
 $(ARCH_SRC)/chip: .config
@@ -118,7 +132,8 @@ ifneq ($(CONFIG_ARCH_CHIP),)
 	$(Q) $(DIRLINK) $(TOPDIR)/$(ARCH_INC)/$(CONFIG_ARCH_CHIP) include/arch/chip
 endif
 
-dirlinks: include/arch include/arch/chip $(ARCH_SRC)/chip
+dirlinks: include/arch include/arch/board include/arch/chip $(ARCH_SRC)/board $(ARCH_SRC)/chip
+	$(Q) $(MAKE) -C configs dirlinks TOPDIR="$(TOPDIR)"
 	$(Q) $(MAKE) -C apps dirlinks TOPDIR="$(TOPDIR)"
 
 # context
@@ -139,11 +154,14 @@ context: check_context $(OUTPUTPATH)/libraries include/ecr/config.h include/ecr/
 # and symbolic links created by the context target.
 
 clean_context:
+	$(Q) $(MAKE) -C configs TOPDIR="$(TOPDIR)" clean_context
 	$(Q) $(MAKE) -C apps TOPDIR="$(TOPDIR)" clean_context
 	$(call DELFILE, include/ecr/config.h)
 	$(call DELFILE, include/ecr/version.h)
+	$(Q) $(DIRUNLINK) include/arch/board
 	$(Q) $(DIRUNLINK) include/arch/chip
 	$(Q) $(DIRUNLINK) include/arch
+	$(Q) $(DIRUNLINK) $(ARCH_SRC)/board
 	$(Q) $(DIRUNLINK) $(ARCH_SRC)/chip
 
 # check_context

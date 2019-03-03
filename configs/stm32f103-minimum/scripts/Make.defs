@@ -1,8 +1,10 @@
 include ${TOPDIR}/.config
 include ${TOPDIR}/tools/Config.mk
+include ${TOPDIR}/arch/arm/src/armv7-m/Toolchain.defs
 
 LDSCRIPT = ld.script
 
+MKDEP = $(TOPDIR)/tools/mkdeps$(HOSTEXEEXT)
 ARCHINCLUDES = -I. -isystem $(TOPDIR)/include
 ARCHXXINCLUDES = -I. -isystem $(TOPDIR)/include -isystem $(TOPDIR)/include/cxx
 ARCHSCRIPT = -T$(TOPDIR)/configs/$(CONFIG_ARCH_BOARD)/scripts/$(LDSCRIPT)
