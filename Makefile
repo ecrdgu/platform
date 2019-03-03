@@ -37,9 +37,19 @@ ARCH_INC = $(ARCH_DIR)/include
 
 include tools/Directories.mk
 
-# This is the name of the final target (relative to the top level directorty)
+# Library build selections
+
+include tools/FlatLibs.mk
 
 OUTPUTPATH = build
+
+# LINKLIBS derives from ECRLIBS and is simply the same list with the
+#   subdirectory removed
+
+LINKLIBS = $(patsubst $(OUTPUTPATH)/libraries/%,%,$(ECRLIBS))
+
+# This is the name of the final target (relative to the top level directorty)
+
 BIN      = $(OUTPUTPATH)/$(OUTPUT)$(EXEEXT)
 
 all: $(BIN)
@@ -68,6 +78,9 @@ include/ecr/version.h: $(TOPDIR)/.version tools/mkversion$(HOSTEXEEXT)
 
 tools/mkconfig$(HOSTEXEEXT):
 	$(Q) $(MAKE) -C tools -f Makefile.host TOPDIR="$(TOPDIR)"  mkconfig$(HOSTEXEEXT)
+
+$(OUTPUTPATH)/libraries:
+	$(Q) mkdir -p $(@)
 
 include/ecr/config.h: $(TOPDIR)/.config tools/mkconfig$(HOSTEXEEXT)
 	$(Q) tools/mkconfig $(TOPDIR) > include/ecr/config.h
@@ -115,7 +128,7 @@ dirlinks: include/arch include/arch/chip $(ARCH_SRC)/chip
 # the config.h and version.h header files in the include/nuttx directory and
 # the establishment of symbolic links to configured directories.
 
-context: check_context include/ecr/config.h include/ecr/version.h dirlinks
+context: check_context $(OUTPUTPATH)/libraries include/ecr/config.h include/ecr/version.h dirlinks
 	$(Q) for dir in $(CONTEXTDIRS) ; do \
 		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" context; \
 	done
