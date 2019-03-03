@@ -1,3 +1,9 @@
+# These are configuration variables that are quoted by configuration tool
+# but which must be unquoated when used in the build system.
+
+CONFIG_ARCH       := $(patsubst "%",%,$(strip $(CONFIG_ARCH)))
+CONFIG_ARCH_CHIP  := $(patsubst "%",%,$(strip $(CONFIG_ARCH_CHIP)))
+
 # Some defaults just to prohibit some bad behavior if for some reason they
 # are not defined
 

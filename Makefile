@@ -26,6 +26,12 @@ DIRLINK = $(TOPDIR)/tools/link.sh
 DIRUNLINK = $(TOPDIR)/tools/unlink.sh
 endif
 
+# Process architecture and board-specific directories
+
+ARCH_DIR = arch/$(CONFIG_ARCH)
+ARCH_SRC = $(ARCH_DIR)/src
+ARCH_INC = $(ARCH_DIR)/include
+
 # Add-on directories.  These may or may not be in place in the
 # Project source tree (they must be specifically installed)
 
@@ -37,7 +43,7 @@ OUTPUTPATH = build
 BIN      = $(OUTPUTPATH)/$(OUTPUT)$(EXEEXT)
 
 all: $(BIN)
-.PHONY: context clean_context check_context config oldconfig menuconfig nconfig qconfig gconfig subdir_clean clean subdir_distclean distclean
+.PHONY: dirlinks context clean_context check_context config oldconfig menuconfig nconfig qconfig gconfig subdir_clean clean subdir_distclean distclean
 
 # Targets used to build include/ecr/version.h.  Creation of version.h is
 # part of the overall NuttX configuration sequence. Notice that the
@@ -71,6 +77,36 @@ include/ecr/config.h: $(TOPDIR)/.config tools/mkconfig$(HOSTEXEEXT)
 tools/mkdeps$(HOSTEXEEXT):
 	$(Q) $(MAKE) -C tools -f Makefile.host TOPDIR="$(TOPDIR)" mkdeps$(HOSTEXEEXT)
 
+# dirlinks, and helpers
+#
+# Directories links.  Most of establishing the NuttX configuration involves
+# setting up symbolic links with 'generic' directory names to specific,
+# configured directories.
+
+# Link the arch/<arch-name>/include directory to include/arch
+
+include/arch: .config
+	@echo "LN: include/arch to $(ARCH_DIR)/include"
+	$(Q) $(DIRLINK) $(TOPDIR)/$(ARCH_DIR)/include include/arch
+
+# Link arch/<arch-name>/include/<chip-name> to arch/<arch-name>/include/chip
+
+$(ARCH_SRC)/chip: .config
+ifneq ($(CONFIG_ARCH_CHIP),)
+	@echo "LN: $(ARCH_SRC)/chip to $(ARCH_SRC)/$(CONFIG_ARCH_CHIP)"
+	$(Q) $(DIRLINK) $(TOPDIR)/$(ARCH_SRC)/$(CONFIG_ARCH_CHIP) $(ARCH_SRC)/chip
+endif
+
+# Link arch/<arch-name>/src/<chip-name> to arch/<arch-name>/src/chip
+
+include/arch/chip: include/arch
+ifneq ($(CONFIG_ARCH_CHIP),)
+	@echo "LN: include/arch/chip to $(ARCH_INC)/$(CONFIG_ARCH_CHIP)"
+	$(Q) $(DIRLINK) $(TOPDIR)/$(ARCH_INC)/$(CONFIG_ARCH_CHIP) include/arch/chip
+endif
+
+dirlinks: include/arch include/arch/chip $(ARCH_SRC)/chip
+	$(Q) $(MAKE) -C apps dirlinks TOPDIR="$(TOPDIR)"
 
 # context
 #
@@ -79,7 +115,7 @@ tools/mkdeps$(HOSTEXEEXT):
 # the config.h and version.h header files in the include/nuttx directory and
 # the establishment of symbolic links to configured directories.
 
-context: check_context include/ecr/config.h include/ecr/version.h
+context: check_context include/ecr/config.h include/ecr/version.h dirlinks
 	$(Q) for dir in $(CONTEXTDIRS) ; do \
 		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" context; \
 	done
@@ -93,6 +129,9 @@ clean_context:
 	$(Q) $(MAKE) -C apps TOPDIR="$(TOPDIR)" clean_context
 	$(call DELFILE, include/ecr/config.h)
 	$(call DELFILE, include/ecr/version.h)
+	$(Q) $(DIRUNLINK) include/arch/chip
+	$(Q) $(DIRUNLINK) include/arch
+	$(Q) $(DIRUNLINK) $(ARCH_SRC)/chip
 
 # check_context
 #

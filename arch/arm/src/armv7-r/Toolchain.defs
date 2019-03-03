@@ -1,0 +1,58 @@
+# Setup for the selected toolchain
+
+#
+# Select and allow the selected toolchain to be overridden by a command-line
+#selection.
+#
+
+ifeq ($(filter y, \
+      $(CONFIG_ARMV7R_TOOLCHAIN_CODESOURCERYL) \
+    ),y)
+  CONFIG_ARMV7R_TOOLCHAIN ?= CODESOURCERYL
+endif
+
+ifeq ($(filter y, \
+      $(CONFIG_ARMV7R_TOOLCHAIN_GNU_EABIL) \
+    ),y)
+  CONFIG_ARMV7R_TOOLCHAIN ?= GNU_EABIL
+endif
+
+#
+# Supported toolchains
+#
+# Each toolchain definition should set:
+#
+#  CROSSDEV         The GNU toolchain triple (command prefix)
+#  ARCROSSDEV       If required, an alternative prefix used when
+#                   invoking ar and nm.
+#  ARCHCPUFLAGS     CPU-specific flags selecting the instruction set
+#                   FPU options, etc.
+#  MAXOPTIMIZATION  The maximum optimization level that results in
+#                   reliable code generation.
+#
+
+ifeq ($(CONFIG_DEBUG_CUSTOMOPT),y)
+  MAXOPTIMIZATION := $(CONFIG_DEBUG_OPTLEVEL)
+endif
+
+ifeq ($(CONFIG_ENDIAN_BIG),y)
+  TARGET_ARCH := armeb
+else
+  TARGET_ARCH := arm
+endif
+
+# CodeSourcery under Linux
+
+ifeq ($(CONFIG_ARMV7R_TOOLCHAIN),CODESOURCERYL)
+  CROSSDEV ?= $(TARGET_ARCH)-none-eabi-
+  ARCROSSDEV ?= $(TARGET_ARCH)-none-eabi-
+  MAXOPTIMIZATION ?= -O2
+endif
+
+# Generic GNU EABI toolchain on OS X, Linux or any typical Posix system
+
+ifeq ($(CONFIG_ARMV7R_TOOLCHAIN),GNU_EABIL)
+  CROSSDEV ?= $(TARGET_ARCH)-none-eabi-
+  ARCROSSDEV ?= $(TARGET_ARCH)-none-eabi-
+  MAXOPTIMIZATION ?= -Os
+endif
